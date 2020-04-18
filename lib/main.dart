@@ -1,3 +1,5 @@
+import './widgets/chart.dart';
+
 import './models/transaction.dart';
 import './widgets/new_transaction.dart';
 import './widgets/transaction_list.dart';
@@ -30,24 +32,27 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<Transaction> _userTransactions = [
-    Transaction(
-        id: 'id1', title: 'new shoes', amount: 10.99, dateTime: DateTime.now()),
-    Transaction(
-        id: 'id2', title: 'grocery', amount: 24.22, dateTime: DateTime.now()),
-  ];
+  final List<Transaction> _userTransactions = [];
 
-  void _addNewTransaction(String title, double amount) {
+  void _addNewTransaction(String title, double amount, DateTime date) {
     if (title.length > 0 && amount != null) {
       final newTransaction = Transaction(
           id: DateTime.now().toString(),
           title: title,
           amount: amount,
-          dateTime: DateTime.now());
+          dateTime: date);
       setState(() {
         _userTransactions.add(newTransaction);
       });
     }
+  }
+
+  void _deleteTransaction(String id) {
+    setState(() {
+      _userTransactions.removeWhere((item) {
+        return item.id == id;
+      });
+    });
   }
 
   void _showAddTransactionModal(BuildContext ctx) {
@@ -61,6 +66,16 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  List<Transaction> get _recentTransactions {
+    return _userTransactions.where((tx) {
+      return tx.dateTime.isAfter(
+        DateTime.now().subtract(
+          Duration(days: 7),
+        ),
+      );
+    }).toList();
   }
 
   @override
@@ -83,12 +98,10 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             Container(
-              child: Card(
-                child: Text('chart'),
-              ),
+              child: Chart(_recentTransactions),
               width: double.infinity,
             ),
-            TransactionList(_userTransactions),
+            TransactionList(_userTransactions, _deleteTransaction),
           ],
         ),
       ),
